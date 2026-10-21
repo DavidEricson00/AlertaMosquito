@@ -234,42 +234,49 @@ class Tabuleiro:
             ox, oy = corners[num]
 
             # 1. Nome do jogador com sombra
+            is_turn = num == jogo.jogador_atual
+
             if num not in self.hud_nomes:
                 name_shadow = fonte.render(f"Jogador {num + 1}", True, "black")
                 name_surf = fonte.render(f"Jogador {num + 1}", True, PLAYER_BORDER_COLORS[num])
-                self.hud_nomes[num] = (name_shadow, name_surf)
-            name_shadow, name_surf = self.hud_nomes[num]
-            utils.smoothscaleblit(screen, 600, name_shadow, (ox + 2, oy + 2), None, 0.3)
-            utils.smoothscaleblit(screen, 600, name_surf, (ox, oy), None, 0.3)
+                name_dark = utils.tint_mult(name_surf, (110, 110, 110))
+                self.hud_nomes[num] = (name_shadow, name_surf, name_dark)
 
-            # 2. Ícone do personagem com indicador de turno ativo
+            name_shadow, name_surf, name_dark = self.hud_nomes[num]
+            displayed_name = name_surf if is_turn else name_dark
+
+            utils.smoothscaleblit(
+                screen, 600, name_shadow,
+                (ox + 1, oy + 1), None, 0.3
+            )
+            utils.smoothscaleblit(
+                screen, 600, displayed_name,
+                (ox, oy), None, 0.3
+            )
+
+            # 2. Ícone colorido no turno ativo, escurecido nos demais.
             icon_x = ox
             icon_y = oy + 20
-            is_turn = (num == jogo.jogador_atual)
-            if is_turn:
-                border_rect = (
-                    int(round((icon_x - 3) * escala_tela)),
-                    int(round((icon_y - 3) * escala_tela)),
-                    int(round(78 * escala_tela)),
-                    int(round(78 * escala_tela))
-                )
-                pygame.draw.rect(
-                    screen,
-                    PLAYER_BORDER_COLORS[num],
-                    border_rect,
-                    width=max(1, int(round(3 * escala_tela))),
-                    border_radius=max(1, int(round(6 * escala_tela)))
-                )
 
             icon, icon_black = self.get_hud_icon(j.personagem)
-            utils.smoothscaleblit(screen, 600, icon_black, (icon_x + 2, icon_y + 2), None, 0.36)
-            utils.smoothscaleblit(screen, 600, icon, (icon_x, icon_y), None, 0.36)
+
+            if not is_turn:
+                icon = utils.tint_mult(icon, (110, 110, 110))
+
+            utils.smoothscaleblit(
+                screen, 600, icon_black,
+                (icon_x + 2, icon_y + 2), None, 0.36
+            )
+            utils.smoothscaleblit(
+                screen, 600, icon,
+                (icon_x, icon_y), None, 0.36
+            )
 
             # 3. Moedas
             coin_x = ox + 76
             coin_y = oy + 36
-            utils.smoothscaleblit(screen, 600, moedinha_black, (coin_x + 2, coin_y + 2), None, 0.24)
-            utils.smoothscaleblit(screen, 600, moedinha, (coin_x, coin_y), None, 0.24)
+            utils.smoothscaleblit(screen, 600, moedinha_black, (coin_x + 2, coin_y + 2), None, 0.32)
+            utils.smoothscaleblit(screen, 600, moedinha, (coin_x, coin_y), None, 0.32)
 
             moedas_key = (num, j.moedas)
             if moedas_key not in self.hud_moedas:
@@ -277,8 +284,8 @@ class Tabuleiro:
                 m_surf = fonte_big.render(str(j.moedas), True, "white")
                 self.hud_moedas[moedas_key] = (m_shadow, m_surf)
             m_shadow, m_surf = self.hud_moedas[moedas_key]
-            utils.smoothscaleblit(screen, 600, m_shadow, (coin_x + 36 + 2, coin_y + 4 + 2), None, 0.3)
-            utils.smoothscaleblit(screen, 600, m_surf, (coin_x + 36, coin_y + 4), None, 0.3)
+            utils.smoothscaleblit(screen, 600, m_shadow, (coin_x + 44 + 2, coin_y +11), None, 0.32)
+            utils.smoothscaleblit(screen, 600, m_surf, (coin_x + 44, coin_y + 10), None, 0.32)
 
             # 4. Barra de medalhas
             bar_x = ox
