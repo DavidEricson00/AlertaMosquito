@@ -7,31 +7,34 @@ from src.core.paths import FONT_MILKS, CHARACTER_WALK_SPRITES
 font48 = pygame.font.Font(FONT_MILKS, 48)
 font64 = pygame.font.Font(FONT_MILKS, 64)
 
+QUANTIDADE_CONFETES = 250
+
+
 class Confete:
     """Individual animated confetti particle falling down the screen."""
-    def __init__(self, x, y, offset):
-        self.x_orig = x
-        self.y_orig = y
-        self.x = x
-        self.y = y
+    def __init__(self, largura, altura):
+        self.largura = largura
+        self.altura = altura
         self.size = random.randint(5, 10)
         self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        self.speed_y = 1
-        self.alpha = 255 + offset
+        self.surface = pygame.Surface((self.size, self.size))
+        self.surface.fill(self.color)
+        self.reset(inicial=True)
 
-    def update(self):
-        self.y += self.speed_y
-        self.alpha -= 2
-        if self.alpha < -255:
-            self.alpha = 255
-            self.x = self.x_orig
-            self.y = self.y_orig
+    def reset(self, inicial=False):
+        self.x = random.uniform(0, self.largura)
+        self.y = random.uniform(-self.altura, self.altura) if inicial else random.uniform(-50, -10)
+        self.speed_y = random.uniform(60, 180)
+        self.sway = random.uniform(-40, 40)
+
+    def update(self, delta):
+        self.y += self.speed_y * delta
+        self.x += self.sway * delta
+        if self.y > self.altura or self.x < -20 or self.x > self.largura + 20:
+            self.reset()
 
     def draw(self, tela):
-        if 0 < self.alpha <= 255:
-            surface = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
-            surface.fill((*self.color, self.alpha))
-            tela.blit(surface, (self.x, self.y))
+        tela.blit(self.surface, (self.x, self.y))
 
 
 class FinalTela:
@@ -50,10 +53,7 @@ class FinalTela:
         ]
 
         self.confetes = []
-        for _ in range(1000):
-            x = random.randint(0, 1066)
-            y = random.randint(0, 600)
-            self.confetes.append(Confete(x, y, random.randint(0, 1000)))
+        self.tamanho_confete = None
 
         self.frame_atual = 0
         self.tempo_frame = 250
@@ -66,6 +66,12 @@ class FinalTela:
         tela.blit(text_surface, text_rect.topleft)
 
     def frame(self, tela, delta, jogo):
+        largura, altura = tela.get_size()
+
+        if self.tamanho_confete != (largura, altura):
+            self.tamanho_confete = (largura, altura)
+            self.confetes = [Confete(largura, altura) for _ in range(QUANTIDADE_CONFETES)]
+
         tela.fill(self.color)
 
         self.desenha_texto(tela, self.mensagem, font64, 150)
@@ -80,15 +86,16 @@ class FinalTela:
             self.personagens[self.frame_atual].subsurface((self.personagem * 24, 0 * 26, 24, 26)),
             (150, 150)
         )
-        sprite_rect = scaled_sprite.get_rect(center=(tela.get_width() // 2, 350))
+        sprite_rect = scaled_sprite.get_rect(center=(largura // 2, 350))
         tela.blit(scaled_sprite, sprite_rect.topleft)
 
         for confete in self.confetes:
-            confete.update()
+            confete.update(delta)
             confete.draw(tela)
 
         self.tempo += delta
         if self.tempo >= 5:
             return "titulo"
+
 
 VictoryScreen = FinalTela
