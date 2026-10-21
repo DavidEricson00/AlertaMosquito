@@ -538,7 +538,7 @@ class Tabuleiro:
                             self.animar(None, jogador.numero)
                         case "+R$5":
                             self.animar("riqueza", jogador.numero)
-                            jogo.receber_moedas(3)
+                            jogo.receber_moedas(5)
                             self.modo = "animando"
                             self.dado_tempo = 0
                         case "-R$2":

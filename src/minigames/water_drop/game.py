@@ -86,7 +86,6 @@ class PingoMinigame:
             bucket_hitbox = pygame.Rect((balde.pos[0], balde.pos[1] - 20, self.balde.get_width(), self.balde.get_height() + 20))
             if util.imagem_colide_com_rect(bucket_hitbox, self.vc, self.vc_pos) and not balde.fechado:
                 balde.fechado = True
-                jogo.receber_moedas(3)
 
             if balde.fechado:
                 balde_img = self.balde_fechado

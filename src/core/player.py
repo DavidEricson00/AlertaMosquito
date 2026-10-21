@@ -7,7 +7,7 @@ class Jogador:
     """Represents a player in the board game, their chosen character, position, and inventory."""
     numero = 0
     personagem = None
-    moedas = 50
+    moedas = 0
     medalhas = 0
     medalha_y = 50
     casa = (0, 0)
