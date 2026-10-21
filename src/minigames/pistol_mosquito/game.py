@@ -120,8 +120,16 @@ class PistolMosquito:
 
         self.veia.update()
 
-        score_text = font.render(f"Pontos: {self.pontos}", True, (255, 0, 0))
-        screen.blit(score_text, (10, 10))
+        # Polished score badge
+        score_str = f"Pontos: {self.pontos}"
+        st_s = font.render(score_str, True, (255, 255, 255))
+        st_sh = font.render(score_str, True, (0, 0, 0))
+        badge_w = st_s.get_width() + 24
+        badge_h = st_s.get_height() + 8
+        pygame.draw.rect(screen, (0, 0, 0, 120), (10, 10, badge_w, badge_h), border_radius=12)
+        pygame.draw.rect(screen, (230, 45, 45), (10, 10, badge_w, badge_h), width=3, border_radius=12)
+        screen.blit(st_sh, (26 + 2, 18 + 2))
+        screen.blit(st_s, (26, 18))
 
         if elapsed_time < self.timer_duration:
             for mosquito in self.mosquitos:

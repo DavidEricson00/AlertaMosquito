@@ -1,6 +1,7 @@
 """Title screen with game logo and start prompt."""
 
 import pygame
+import math
 import src.core.utils as utils
 from src.core.paths import get_asset_path, FONT_MILKS
 
@@ -42,13 +43,36 @@ class Titulo:
         logo_rect.centery = screen.get_rect().centery - screen.get_height() // 15
         screen.blit(logo_scaled, logo_rect)
 
-        # Draw instructional messages
+        # Draw instructional messages with vibrant button badge and gentle float
+        tempo = pygame.time.get_ticks()
+        pulse = math.sin(tempo / 250) * 3
+
+        vw = 600 / screen.get_height() * screen.get_width()
         mensagem = 'Pressione qualquer tecla para iniciar'
-        mensagem1 = 'Pressione esc para sair'
+        mensagem1 = 'Pressione ESC para sair'
+
         texto_formatado = fonte.render(mensagem, True, (255, 255, 255))
-        texto_formatado1 = fonte1.render(mensagem1, True, (255, 255, 255))
-        utils.scaleblit(screen, 600, texto_formatado, (600 / screen.get_height() * screen.get_width() / 2 - texto_formatado.get_width() / 2, 480))
-        utils.scaleblit(screen, 600, texto_formatado1, (600 / screen.get_height() * screen.get_width() / 2 - texto_formatado1.get_width() / 2, 530))
+        texto_sombra = fonte.render(mensagem, True, (15, 70, 35))
+
+        btn_w = texto_formatado.get_width() + 48
+        btn_h = 56
+        btn_x = vw / 2 - btn_w / 2
+        btn_y = 475 + pulse
+
+        # Button shadow and rounded pill body
+        utils.scaledrawrect(screen, 600, (0, 0, 0, 70), (btn_x + 2, btn_y + 4, btn_w, btn_h), border_radius=28)
+        utils.scaledrawrect(screen, 600, (34, 180, 94), (btn_x, btn_y, btn_w, btn_h), border_radius=28)
+        utils.scaledrawrect(screen, 600, (130, 240, 165), (btn_x, btn_y, btn_w, btn_h), border_radius=28)
+        utils.scaledrawrect(screen, 600, (34, 180, 94), (btn_x + 2, btn_y + 2, btn_w - 4, btn_h - 4), border_radius=26)
+
+        utils.scaleblit(screen, 600, texto_sombra, (btn_x + 24 + 1, btn_y + 12 + 1))
+        utils.scaleblit(screen, 600, texto_formatado, (btn_x + 24, btn_y + 12))
+
+        texto_formatado1 = fonte1.render(mensagem1, True, (240, 250, 245))
+        texto_sombra1 = fonte1.render(mensagem1, True, (20, 40, 30))
+        esc_x = vw / 2 - texto_formatado1.get_width() / 2
+        utils.scaleblit(screen, 600, texto_sombra1, (esc_x + 1, 542 + 1))
+        utils.scaleblit(screen, 600, texto_formatado1, (esc_x, 542))
 
         # Selection verification and hotkeys
         if self.comecar:
