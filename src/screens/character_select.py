@@ -1,5 +1,3 @@
-"""Character selection screen for 2 to 4 players."""
-
 import pygame
 import src.core.utils as utils
 from src.core.player import Jogador
@@ -9,15 +7,25 @@ from src.core.paths import get_asset_path, CHARACTER_PORTRAITS, UI_NUMBERS
 border_color_nenhum = BORDER_COLOR_NONE
 border_colors = PLAYER_BORDER_COLORS
 
-border_size = 10
-border_size1 = 5
-border_radius = 10
+border_size = 6
+border_size1 = 4
+border_radius = 15
 
 def draw_image_with_border(screen, image, pos, width, border_color, border_size, border_radius):
-    """Draw a surface surrounded by a rounded rectangle border."""
     image_rect = image.get_rect(topleft=pos)
     image_rect.height *= width / image_rect.width
     image_rect.width = width
+
+    utils.scaledrawrect(
+        screen, 600, (15, 15, 15),
+        (
+            image_rect.x - border_size + 5,
+            image_rect.y - border_size + 5,
+            image_rect.width + border_size * 2,
+            image_rect.height + border_size * 2
+        ),
+        border_radius=border_radius
+    )
 
     utils.scaledrawrect(
         screen, 600, border_color,
@@ -30,15 +38,24 @@ def draw_image_with_border(screen, image, pos, width, border_color, border_size,
         border_radius=border_radius
     )
 
+    utils.scaledrawrect(
+        screen, 600, (45, 45, 50),
+        (
+            image_rect.x,
+            image_rect.y,
+            image_rect.width,
+            image_rect.height
+        ),
+        border_radius=max(0, border_radius - border_size)
+    )
+
     utils.smoothscaleblit(screen, 600, image, pos, None, width / image.get_width())
     return image_rect
 
 def is_mouse_over(screen, image_rect):
-    """Check if the mouse cursor collides with the scaled image bounding box."""
     return image_rect.collidepoint(utils.mouse_pos_para(screen, 600))
 
 class Selecion:
-    """Character selection screen allowing players to pick distinct characters before starting."""
     def __init__(self, casas, jogo):
         jogo.jogadores = [Jogador(), Jogador(), Jogador(), Jogador()]
         for i in range(4):
@@ -48,7 +65,10 @@ class Selecion:
         self.portratos = [
             pygame.image.load(p).convert_alpha() for p in CHARACTER_PORTRAITS
         ]
-        self.ninguem = pygame.Surface((200, 300))
+        
+        self.ninguem = pygame.Surface((200, 300), pygame.SRCALPHA)
+        self.ninguem.fill((0, 0, 0, 120))
+        
         self.start = pygame.image.load(get_asset_path("screens", "character_select", "start.png")).convert_alpha()
 
         self.number1 = pygame.image.load(UI_NUMBERS[0]).convert_alpha()
@@ -61,7 +81,6 @@ class Selecion:
     def frame(self, screen, delta, jogo):
         screen.blit(pygame.transform.scale(self.fundo, screen.get_size()), (0, 0))
 
-        # Render portraits for each player slot
         draw_image_with_border(
             screen,
             self.portratos[jogo.jogadores[0].personagem] if jogo.jogadores[0].personagem is not None else self.ninguem,
@@ -83,7 +102,6 @@ class Selecion:
             (820, 50), 200, border_colors[3], border_size, border_radius
         )
 
-        # Track which player has selected each character
         jogador_que_escolheu = [None, None, None, None]
         for jogador in jogo.jogadores:
             if jogador.personagem is not None:
@@ -94,28 +112,24 @@ class Selecion:
             if jogador.personagem is not None:
                 cor_do_jogador_que_escolheu[jogador.personagem] = border_colors[jogador.numero]
 
-        # Draw character icon buttons
         jm_rect = draw_image_with_border(screen, utils.icones[0], (300, 420), 100, cor_do_jogador_que_escolheu[0], border_size1, border_radius)
         hk_rect = draw_image_with_border(screen, utils.icones[1], (420, 420), 100, cor_do_jogador_que_escolheu[1], border_size1, border_radius)
         enzo_rect = draw_image_with_border(screen, utils.icones[2], (540, 420), 100, cor_do_jogador_que_escolheu[2], border_size1, border_radius)
         an_rect = draw_image_with_border(screen, utils.icones[3], (660, 420), 100, cor_do_jogador_que_escolheu[3], border_size1, border_radius)
 
-        # Draw number indicators
         utils.scaleblit(screen, 600, self.number1, (52, 55), None, 4)
         utils.scaleblit(screen, 600, self.number2, (308, 55), None, 4)
         utils.scaleblit(screen, 600, self.number3, (563, 55), None, 4)
         utils.scaleblit(screen, 600, self.number4, (823, 55), None, 4)
 
-        # Start game button appears when at least 2 players are selected
         if self.jogadores >= 2:
             iniciar_rect = draw_image_with_border(screen, self.start, (780, 420), 100, (91, 191, 91), border_size1, border_radius)
             if is_mouse_over(screen, iniciar_rect):
-                iniciar_rect = draw_image_with_border(screen, self.start, (780, 420), 100, (127, 255, 127), border_size1, border_radius)
+                iniciar_rect = draw_image_with_border(screen, self.start, (780, 420), 100, (140, 255, 140), border_size1, border_radius)
                 if pygame.mouse.get_pressed()[0]:
                     jogo.jogadores = jogo.jogadores[:self.jogadores]
                     return "iniciar jogo"
 
-        # Character selection hover and click
         if self.jogadores < 4:
             jogador = jogo.jogadores[self.jogadores]
             aceitaveis = [None, jogador.numero]
@@ -131,12 +145,14 @@ class Selecion:
                 jogador.personagem = None
 
             if jogador.personagem is not None:
-                utils.scaleblit(screen, 400, jogador.get_andamento("down"), (50, 270), None, 4)
                 if pygame.mouse.get_pressed()[0]:
                     if not self.pressed:
                         self.jogadores += 1
                         self.pressed = True
                 else:
+                    self.pressed = False
+            else:
+                if not pygame.mouse.get_pressed()[0]:
                     self.pressed = False
 
 CharacterSelect = Selecion
