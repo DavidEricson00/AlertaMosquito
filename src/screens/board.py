@@ -21,7 +21,7 @@ TIPOS = [
     "dado", "dado",
     "carta", "carta", "carta",
     "minigame", "minigame", "minigame",
-    "teleporte"
+    "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte"
 ]
 
 MAPA = [
@@ -132,6 +132,8 @@ class Tabuleiro:
         self.dado_surfaces = {}
         self.carta_texto_cache = None
         self.carta_cache_key = None
+        self.teleporte_destino = None
+        self.hud_teleporte_cache = {}
 
         if animacao_inicial is not None:
             self.modo = "animando"
@@ -208,6 +210,29 @@ class Tabuleiro:
             shadow = utils.tint_mult(txt, (0, 0, 0, 31))
             self.dado_surfaces[numero] = (txt, shadow)
         return self.dado_surfaces[numero]
+
+    def desenhar_banner_teleporte(self, screen, numero_jogador, destino):
+        """Display clear destination feedback banner during teleportation."""
+        vw = screen.get_width() * 600 / screen.get_height()
+        banner_w = 520
+        banner_h = 70
+        bx = (vw - banner_w) / 2
+        by = 18
+
+        utils.scaledrawrect(screen, 600, (0, 0, 0, 75), (bx + 2, by + 4, banner_w, banner_h), border_radius=16)
+        utils.scaledrawrect(screen, 600, (22, 38, 68), (bx, by, banner_w, banner_h), border_radius=16)
+        utils.scaledrawrect(screen, 600, (80, 210, 255), (bx, by, banner_w, banner_h), border_radius=16)
+        utils.scaledrawrect(screen, 600, (22, 38, 68), (bx + 2, by + 2, banner_w - 4, banner_h - 4), border_radius=14)
+
+        # Title
+        t_txt = "TELETRANSPORTE!"
+        if t_txt not in self.hud_teleporte_cache:
+            t_s = fonte.render(t_txt, True, (255, 220, 50))
+            t_sh = fonte.render(t_txt, True, (0, 0, 0))
+            self.hud_teleporte_cache[t_txt] = (t_s, t_sh)
+        t_s, t_sh = self.hud_teleporte_cache[t_txt]
+        utils.smoothscaleblit(screen, 600, t_sh, (bx + (banner_w - t_s.get_width() * 0.4) / 2 + 1, by + 12 + 1), None, 0.4)
+        utils.smoothscaleblit(screen, 600, t_s, (bx + (banner_w - t_s.get_width() * 0.4) / 2, by + 12), None, 0.4)
 
     def desenhar_huds(self, screen, jogo, delta):
         """Render HUD indicators for all active players in the screen corners."""
@@ -431,15 +456,32 @@ class Tabuleiro:
                     t = 1 - math.sin(x)
                     sprite = utils.tint_mult(sprite, (255, 255 * t, 255 * t))
                 case ("teleporte", tempo_inicio, _):
-                    if tempo >= tempo_inicio + 1000:
-                        jogador.casa = (random.randint(0, len(MAPA)), random.randint(0, len(MAPA[0])))
-                        while not self.encontrar_casa(jogador.casa):
-                            jogador.casa = (random.randint(0, len(MAPA)), random.randint(0, len(MAPA[0])))
-                        jogo.passar_vez()
-                        self.modo = "dado"
-                        self.dado_numero = random.randint(1, 6)
-                        self.animar(None, numero)
-                    sprite = jogador.get_andamento(["down", "left", "up", "right"][(tempo - tempo_inicio) // 100 % 4], True)
+                    tempo_decorrido = tempo - tempo_inicio
+                    if tempo_decorrido < 800:
+                        sprite = jogador.get_andamento(["down", "left", "up", "right"][tempo_decorrido // 100 % 4], True)
+                    else:
+                        if self.teleporte_destino is None:
+                            nova_casa = (random.randint(0, len(MAPA) - 1), random.randint(0, len(MAPA[0]) - 1))
+                            while not self.encontrar_casa(nova_casa) or nova_casa == jogador.casa:
+                                nova_casa = (random.randint(0, len(MAPA) - 1), random.randint(0, len(MAPA[0]) - 1))
+                            jogador.casa = nova_casa
+                            self.teleporte_destino = nova_casa
+
+                        self.desenhar_banner_teleporte(screen, jogador.numero, self.teleporte_destino)
+                        sprite = jogador.get_andamento("down", True)
+
+                        if tempo_decorrido >= 2400:
+                            self.animar(None, numero)
+                            self.teleporte_destino = None
+                            if self.passos_restantes > 0:
+                                self.dado_numero = self.passos_restantes
+                                self.passos_restantes = 0
+                                self.dado_tempo = 0
+                                self.modo = "andando"
+                            else:
+                                jogo.passar_vez()
+                                self.modo = "dado"
+                                self.dado_numero = random.randint(1, 6)                
                 case ("decisao", tempo_inicio, _):
                     pass
 
