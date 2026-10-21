@@ -6,12 +6,18 @@ import pygame
 escolhida = 0
 resposta_escolhida = None
 tempo_escolhido = None
+versao = 0
 
 def reescolher_pergunta():
     """Select a new random question from the question database and reset player choice."""
-    global escolhida, resposta_escolhida
+    global escolhida, resposta_escolhida, versao
     escolhida = random.randint(0, len(PERGUNTAS) - 1)
     resposta_escolhida = None
+    versao += 1
+
+def get_versao():
+    """Return integer tracking question updates for cache invalidation."""
+    return versao
 
 def get_pergunta():
     """Get the current selected question tuple."""

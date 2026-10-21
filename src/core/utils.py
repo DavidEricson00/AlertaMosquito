@@ -57,6 +57,11 @@ def scaleblit(screen, altura_esperada, obj, pos, area=None, escala_extra=1):
     else:
         area = pygame.Rect(area)
 
+    if abs(escala_total - 1.0) < 1e-4:
+        sub = obj if area == obj.get_rect() else obj.subsurface(area)
+        screen.blit(sub, (pos[0] * escala_tela, pos[1] * escala_tela))
+        return
+
     escalado = pygame.transform.scale_by(obj.subsurface(area), escala_total)
     screen.blit(escalado, (pos[0] * escala_tela, pos[1] * escala_tela))
 
@@ -70,16 +75,16 @@ def smoothscaleblit(screen, altura_esperada, obj, pos, area=None, escala_extra=1
     else:
         area = pygame.Rect(area)
 
-    key = (obj, area[0], area[1], area[2], area[3], escala_total)
-    escalado = cache_atual.get(key)
-    if escalado is None:
-        if int(obj.get_height() * escala_total) != obj.get_height():
+    if abs(escala_total - 1.0) < 1e-4:
+        escalado = obj if area == obj.get_rect() else obj.subsurface(area)
+    else:
+        key = (obj, area[0], area[1], area[2], area[3], escala_total)
+        escalado = cache_atual.get(key)
+        if escalado is None:
             escalado = cache_anterior.get(key)
             if escalado is None:
                 escalado = pygame.transform.smoothscale_by(obj.subsurface(area), escala_total)
             cache_atual[key] = escalado
-        else:
-            escalado = obj
     if not fake:
         screen.blit(escalado, (pos[0] * escala_tela, pos[1] * escala_tela))
 
@@ -144,38 +149,39 @@ def deslize(img, obj, pos, movimento_vetor):
 def smoothscale_draw_text(surface, altura_esperada, text, color, rect, font, escala=1, aa=True, bkg=None, sombra=False):
     """Draw text wrapped into an area with smooth scaling and optional shadow."""
     rect = pygame.Rect(rect)
-    if sombra:
-        c = 1
-        e = 2
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(-c, -c), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(-e, 0), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(-c, c), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(0, -e), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(0, 0), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(0, e), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(c, -c), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(e, 0), font, escala)
-        smoothscale_draw_text(surface, altura_esperada, text, (0, 0, 0, 63), rect.move(c, c), font, escala)
-
     y = rect.top
     line_spacing = -2
     font_height = font.size("Tg")[1] * escala
-    rect.width /= escala
-    rect.height /= escala
+    max_width = rect.width / escala
+
+    shadow_offsets = [
+        (-1, -1), (-2, 0), (-1, 1),
+        (0, -2), (0, 0), (0, 2),
+        (1, -1), (2, 0), (1, 1)
+    ] if sombra else None
 
     while text:
         i = 1
-        while font.size(text[:i])[0] < rect.width and i < len(text):
+        while font.size(text[:i])[0] < max_width and i < len(text):
             i += 1
 
         if i < len(text):
-            i = text.rfind(" ", 0, i) + 1
+            sp = text.rfind(" ", 0, i)
+            if sp != -1:
+                i = sp + 1
+
+        line = text[:i]
+
+        if shadow_offsets:
+            shadow_img = font.render(line, aa, (0, 0, 0, 63))
+            for dx, dy in shadow_offsets:
+                smoothscaleblit(surface, altura_esperada, shadow_img, (rect.left + dx, y + dy), None, escala)
 
         if bkg:
-            image = font.render(text[:i], 1, color, bkg)
+            image = font.render(line, 1, color, bkg)
             image.set_colorkey(bkg)
         else:
-            image = font.render(text[:i], aa, color)
+            image = font.render(line, aa, color)
 
         smoothscaleblit(surface, altura_esperada, image, (rect.left, y), None, escala)
         y += font_height + line_spacing

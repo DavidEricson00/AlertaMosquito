@@ -64,6 +64,7 @@ cartabg = pygame.image.load(get_asset_path("screens", "board", "card_bg.png")).c
 interrogacao = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "question_mark.webp")).convert_alpha(), (160, 160))
 seta = pygame.image.load(get_asset_path("screens", "board", "arrow.png")).convert_alpha()
 moedinha = pygame.transform.smoothscale_by(pygame.image.load(UI_COIN).convert_alpha(), 0.1)
+moedinha_black = utils.tint_mult(moedinha, "black")
 
 fonte = pygame.font.Font(FONT_PRESS_START, 50)
 fonte_big = pygame.font.Font(FONT_PRESS_START, 64)
@@ -88,6 +89,7 @@ barras = [
     )
     for i in range(6)
 ]
+barras_black = [utils.tint_mult(b, "black") for b in barras]
 
 def casa_id_para_pos(tile_id):
     """Convert grid tile coordinates (x, y) to screen coordinates."""
@@ -124,6 +126,10 @@ class Tabuleiro:
         self.tempo = 0
         self.pode_entrar_em_camera = False
         self.texto_dire = texto_dire
+        self.hud_icons = {}
+        self.dado_surfaces = {}
+        self.carta_texto_cache = None
+        self.carta_cache_key = None
 
         if casas is not None:
             self.casas = casas
@@ -181,6 +187,21 @@ class Tabuleiro:
             if j.numero != exceto_numero and j.casa == casa and self.animacoes[j.numero][0] is None:
                 conta += 1
         return conta
+
+    def get_hud_icon(self, personagem):
+        """Return cached scaled icon and its shadow tint for the player HUD."""
+        if personagem not in self.hud_icons:
+            ic = pygame.transform.smoothscale_by(utils.icones[personagem], 0.1)
+            self.hud_icons[personagem] = (ic, utils.tint_mult(ic, "black"))
+        return self.hud_icons[personagem]
+
+    def get_dado_surfaces(self, numero):
+        """Return cached rendered dice number surface and its shadow tint."""
+        if numero not in self.dado_surfaces:
+            txt = self.font_dado.render(str(numero), True, "black")
+            shadow = utils.tint_mult(txt, (0, 0, 0, 31))
+            self.dado_surfaces[numero] = (txt, shadow)
+        return self.dado_surfaces[numero]
 
     def camerado(self, pos):
         """Transform world coordinate to camera-relative screen coordinate."""
@@ -240,8 +261,11 @@ class Tabuleiro:
 
         if self.escala_mapa >= 1.249:
             utils.smoothscaleblit(screen, 600 * 1.25, self.tabuleiro, self.camerado((0, 0)), None, 600 / screen.get_height())
+        elif abs(self.escala_mapa - 1.0) < 1e-4:
+            escala_tela = screen.get_height() / 600
+            cam = self.camerado((0, 0))
+            screen.blit(self.tabuleiro, (cam[0] * escala_tela, cam[1] * escala_tela))
         else:
-            utils.smoothscaleblit(screen, 600 * 1.25, self.tabuleiro, self.camerado((0, 0)), None, 600 / screen.get_height(), True)
             utils.scaleblit(screen, 600 * self.escala_mapa, self.tabuleiro, self.camerado((0, 0)), None, 600 / screen.get_height())
 
         # Render and animate players
@@ -384,14 +408,14 @@ class Tabuleiro:
         # Display HUD: player name, icon, coins, medals
         utils.smoothscaleblit(screen, 600, fonte.render(f"Jogador {jogo.jogador_atual + 1}", True, "black"), (4 + 2, 4 + 2), None, 0.5)
         utils.smoothscaleblit(screen, 600, fonte.render(f"Jogador {jogo.jogador_atual + 1}", True, PLAYER_BORDER_COLORS[jogo.jogador_atual]), (4, 4), None, 0.5)
-        icon = pygame.transform.smoothscale_by(jogador.get_icone(), 0.1)
-        utils.smoothscaleblit(screen, 600, utils.tint_mult(icon, "black"), (2, 47), None, 0.6)
+        icon, icon_black = self.get_hud_icon(jogador.personagem)
+        utils.smoothscaleblit(screen, 600, icon_black, (2, 47), None, 0.6)
         utils.smoothscaleblit(screen, 600, icon, (0, 45), None, 0.6)
-        utils.smoothscaleblit(screen, 600, utils.tint_mult(moedinha, "black"), (130, 96 + 2), None, 0.4)
+        utils.smoothscaleblit(screen, 600, moedinha_black, (130, 96 + 2), None, 0.4)
         utils.smoothscaleblit(screen, 600, moedinha, (128, 96), None, 0.4)
         utils.smoothscaleblit(screen, 600, fonte_big.render(str(jogador.moedas), True, "black"), (180 + 2, 96 + 8 + 2), None, 0.5)
         utils.smoothscaleblit(screen, 600, fonte_big.render(str(jogador.moedas), True, "white"), (180 + 0, 96 + 8 + 0), None, 0.5)
-        utils.smoothscaleblit(screen, 600, utils.tint_mult(barras[jogador.medalhas], "black"), (6, 152), None, 0.5)
+        utils.smoothscaleblit(screen, 600, barras_black[jogador.medalhas], (6, 152), None, 0.5)
         utils.smoothscaleblit(screen, 600, barras[jogador.medalhas], (4, 150), None, 0.5)
 
         movimento = utils.movimento(1024, delta)
@@ -399,9 +423,8 @@ class Tabuleiro:
             dado_rect = pygame.Rect(0, 0, DADO_SIZE, DADO_SIZE)
             dado_rect.center = (screen.get_width() * 600 / screen.get_height() * 0.5, 600 * 0.75)
             utils.smoothscaleblit(screen, 600, dadobgs[jogo.jogador_atual], dado_rect.topleft)
-            dado_texto = self.font_dado.render(str(self.dado_numero), True, "black")
+            dado_texto, dado_texto_shadow = self.get_dado_surfaces(self.dado_numero)
             utils.smoothscaleblit(screen, 600, dado_texto, (dado_rect.x + 24, dado_rect.y + 8))
-            dado_texto_shadow = utils.tint_mult(dado_texto, (0, 0, 0, 31))
             utils.smoothscaleblit(screen, 600, dado_texto_shadow, (dado_rect.x + 25, dado_rect.y + 7))
             utils.smoothscaleblit(screen, 600, dado_texto_shadow, (dado_rect.x + 24, dado_rect.y + 6))
             utils.smoothscaleblit(screen, 600, dado_texto_shadow, (dado_rect.x + 23, dado_rect.y + 7))
@@ -424,32 +447,50 @@ class Tabuleiro:
             utils.smoothscaleblit(screen, 600, cartabg, carta_pos, None, carta_escala)
             utils.smoothscaleblit(screen, 600, cartabg, (carta_pos[0] + 24, carta_pos[1] + 24), None, 0.25)
             utils.smoothscaleblit(screen, 600, cartabg, carta_pos, None, carta_escala)
+
             pergunta = perguntas.get_pergunta()
-            pgt_rect = pygame.Rect(carta_pos[0] + 40, carta_pos[1] + 96, cartabg.get_width() * carta_escala - 80, 0)
-            utils.smoothscale_draw_text(screen, 600, pergunta[0], "white", pgt_rect, self.font_pergunta, 0.5, sombra=True)
-            pgt_rect.left += 32
-            pgt_rect.width = cartabg.get_width() * carta_escala - 112
-            pgt_rect.y = carta_pos[1] + cartabg.get_height() * carta_escala * 0.5 + 24
-            pgt_rect.height = 56
+            escala_tela = screen.get_height() / 600
+
+            # Render dynamic backgrounds for answer options (hover, correct, wrong)
+            pgt_y = carta_pos[1] + cartabgh * 0.5 + 24
+            pgt_h = 56
+            resposta = perguntas.get_resposta()
             for i in range(4):
-                resposta = perguntas.get_resposta()
                 if resposta == i or resposta is None or (resposta is not None and pergunta[5] == i):
-                    alt_fundo_rect = pygame.Rect(carta_pos[0] + 53 * carta_escala, pgt_rect.y - 4, 737 * carta_escala, pgt_rect.height)
-                    alt_fundo = pygame.Surface(alt_fundo_rect.size)
+                    alt_fundo_rect = pygame.Rect(carta_pos[0] + 53 * carta_escala, pgt_y - 4, 737 * carta_escala, pgt_h)
                     if resposta is not None and pergunta[5] == i:
-                        alt_fundo.fill(0x0fbb1e)
-                        utils.smoothscaleblit(screen, 600, alt_fundo, alt_fundo_rect.topleft)
+                        utils.scaledrawrect(screen, 600, 0x0fbb1e, alt_fundo_rect)
                     elif resposta == i:
-                        alt_fundo.fill(0xbb0f1e)
-                        utils.smoothscaleblit(screen, 600, alt_fundo, alt_fundo_rect.topleft)
+                        utils.scaledrawrect(screen, 600, 0xbb0f1e, alt_fundo_rect)
                     elif alt_fundo_rect.collidepoint(utils.mouse_pos_para(screen, 600)):
-                        alt_fundo.fill(0x550f1e)
-                        utils.smoothscaleblit(screen, 600, alt_fundo, alt_fundo_rect.topleft)
+                        utils.scaledrawrect(screen, 600, 0x550f1e, alt_fundo_rect)
                         if pygame.mouse.get_pressed()[0]:
                             perguntas.escolher_resposta(i)
-                utils.smoothscale_draw_text(screen, 600, ["A)", "B)", "C)", "D)"][i], "white", pgt_rect.move(-24, 0), self.font_resposta, 0.5, sombra=True)
-                utils.smoothscale_draw_text(screen, 600, pergunta[i + 1], "white", pgt_rect, self.font_resposta, 0.5, sombra=True)
-                pgt_rect.y += pgt_rect.height
+                pgt_y += pgt_h
+
+            # Check / update cached static text surface for the card
+            cache_key = (perguntas.get_versao(), screen.get_size())
+            if self.carta_texto_cache is None or self.carta_cache_key != cache_key:
+                card_surf_w = int(round(cartabgw * escala_tela))
+                card_surf_h = int(round(cartabgh * escala_tela))
+                card_text_surf = pygame.Surface((card_surf_w, card_surf_h), pygame.SRCALPHA)
+
+                # Question text
+                q_rect = pygame.Rect(40, 96, cartabgw - 80, 0)
+                utils.smoothscale_draw_text(card_text_surf, cartabgh, pergunta[0], "white", q_rect, self.font_pergunta, 0.5, sombra=True)
+
+                # Answers text
+                opt_rect = pygame.Rect(72, cartabgh * 0.5 + 24, cartabgw - 112, 56)
+                for i in range(4):
+                    utils.smoothscale_draw_text(card_text_surf, cartabgh, ["A)", "B)", "C)", "D)"][i], "white", opt_rect.move(-24, 0), self.font_resposta, 0.5, sombra=True)
+                    utils.smoothscale_draw_text(card_text_surf, cartabgh, pergunta[i + 1], "white", opt_rect, self.font_resposta, 0.5, sombra=True)
+                    opt_rect.y += 56
+
+                self.carta_texto_cache = card_text_surf
+                self.carta_cache_key = cache_key
+
+            # Blit the pre-rendered text surface directly over the card
+            screen.blit(self.carta_texto_cache, (carta_pos[0] * escala_tela, carta_pos[1] * escala_tela))
         elif self.modo == "camera":
             self.setas_mults = [
                 utils.clamp(self.setas_mults[0] + self.setas_direcoes[0] * 4 * delta, -1.0, 2.0),
