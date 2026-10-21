@@ -3,7 +3,6 @@ from pathlib import Path
 # Base directories
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 ASSETS_DIR = PROJECT_ROOT / "assets"
-SRC_DIR = PROJECT_ROOT / "src"
 
 def get_asset_path(*subpaths: str) -> str:
     """Return the absolute path string for an asset, ensuring cross-platform compatibility."""

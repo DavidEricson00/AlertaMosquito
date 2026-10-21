@@ -83,13 +83,6 @@ def smoothscaleblit(screen, altura_esperada, obj, pos, area=None, escala_extra=1
     if not fake:
         screen.blit(escalado, (pos[0] * escala_tela, pos[1] * escala_tela))
 
-def tint(obj, cor):
-    """Apply an additive color tint to an image."""
-    obj = obj.copy()
-    obj.fill((191, 191, 191, 255), None, pygame.BLEND_RGBA_MULT)
-    obj.fill(cor, None, pygame.BLEND_RGB_ADD)
-    return obj
-
 def tint_mult(obj, cor):
     """Apply a multiplicative color tint to an image."""
     if cor not in ((255, 255, 255, 255), (255, 255, 255), "white"):

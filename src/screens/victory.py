@@ -33,8 +33,6 @@ class Confete:
             surface.fill((*self.color, self.alpha))
             tela.blit(surface, (self.x, self.y))
 
-    def is_visible(self):
-        return 0 < self.alpha <= 255
 
 class FinalTela:
     """Victory screen controller celebrating the winning player."""
@@ -57,7 +55,6 @@ class FinalTela:
             y = random.randint(0, 600)
             self.confetes.append(Confete(x, y, random.randint(0, 1000)))
 
-        self.font = pygame.font.Font(FONT_MILKS, 50)
         self.frame_atual = 0
         self.tempo_frame = 250
         self.ultimo_tempo = pygame.time.get_ticks()

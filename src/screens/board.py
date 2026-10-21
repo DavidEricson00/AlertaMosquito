@@ -46,12 +46,6 @@ MAPA = [
     "                  "
 ]
 
-CENTRO = (
-    1066 / 2 - (CASA_STRIDE * len(MAPA[0]) - (CASA_STRIDE - CASA_SIZE)) / 2,
-    600 / 2 - (CASA_STRIDE * len(MAPA) - (CASA_STRIDE - CASA_SIZE)) / 2
-)
-CASAS_OFFSET = (8, 24)
-
 # Load Board Visual Assets
 fundo = pygame.image.load(get_asset_path("screens", "board", "map_floor.png")).convert_alpha()
 objetos = [
@@ -124,7 +118,6 @@ class Tabuleiro:
 
     def __init__(self, casas, jogo):
         self.modo = "dado"
-        self.font = pygame.font.Font(None, 24)
         self.font_pergunta = pygame.font.Font(None, 56)
         self.font_resposta = pygame.font.Font(None, 48)
         self.font_dado = pygame.font.Font(None, 128)
@@ -328,7 +321,7 @@ class Tabuleiro:
                 case ("carta", tempo_inicio, _):
                     utils.smoothscaleblit(screen, 600, interrogacao, self.camerado((pos[0] + 0, pos[1] + 0)))
                 case ("decisao", tempo_inicio, _):
-                    _texto_dec = self.font_dado.render(str(self.texto_dire), True, "black")
+                    pass
 
             sprite_tamanho = (72, 78)
             if jogo.jogador_atual != numero:

@@ -80,7 +80,6 @@ class WalkMinigame:
     tamanho = (1280, 720)
 
     def __init__(self):
-        self.fonte = pygame.font.Font(None, 64)
         self.spawn = True
         self.trigger = False
         self.posicao = 0.0
@@ -93,13 +92,10 @@ class WalkMinigame:
 
         # Scenery parallax layers
         self.clouds = pygame.image.load(get_asset_path("minigames", "runner", "clouds.png")).convert_alpha()
-        self.clouds_rect = self.clouds.get_rect(topleft=(0, 0))
 
         self.background = pygame.image.load(get_asset_path("minigames", "runner", "background.png")).convert_alpha()
-        self.background_rect = self.background.get_rect(topleft=(0, 0))
 
         self.ground = pygame.image.load(get_asset_path("minigames", "runner", "ground.png")).convert_alpha()
-        self.ground_rect = self.ground.get_rect(bottomleft=(0, 720))
 
         # Directional key hint sprites
         self.upkey = pygame.image.load(get_asset_path("minigames", "runner", "key_up.png")).convert_alpha()

@@ -55,11 +55,10 @@ AlertaMosquito/
 │   ├── ui/                          # Dados, números, moedas, medalhas e barra de tempo
 │   ├── screens/                     # Recursos visuais por tela (title, character_select, board)
 │   ├── minigames/                   # Recursos visuais exclusivos de cada minigame
-│   │   ├── pistol_mosquito/         # Cenário, mira, mosquito e veia
+│   │   ├── pistol_mosquito/         # Cenário, mosquito e veia
 │   │   ├── water_drop/              # Cenário de caverna, água, areia, baldes e estalactites
 │   │   ├── space_dengue/            # Fundo espacial, mosquito alien, lasers e barreiras
 │   │   └── runner/                  # Menino correndo, obstáculos (balde, lixo, pneu) e nuvens
-│   └── raw/                         # Protótipos originais, artes conceituais e arquivos .aseprite
 ├── src/                             # Código-fonte modular
 │   ├── core/                        # Núcleo do jogo, configurações, caminhos e utilitários
 │   │   ├── paths.py                 # Resolução dinâmica e multiplataforma de caminhos
@@ -77,7 +76,6 @@ AlertaMosquito/
 │   │   ├── water_drop/              # Minigame da caverna tampando os baldes de água
 │   │   ├── space_dengue/            # Minigame estilo space invaders eliminando mosquitos
 │   │   └── runner/                  # Minigame de corrida pulando e desviando de criadouros
-│   └── legacy/                      # Arquivos preservados para histórico (telaresultado.py)
 ├── main.py                          # Ponto de entrada e máquina de estados principal
 ├── requirements.txt                 # Dependências do projeto (Pygame)
 ├── .gitignore                       # Filtros de arquivos ignorados no controle de versão

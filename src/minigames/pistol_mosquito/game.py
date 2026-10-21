@@ -8,7 +8,6 @@ from src.core.paths import get_asset_path
 # Load assets
 mosquito_image = pygame.image.load(get_asset_path("minigames", "pistol_mosquito", "mosquito_flying.png")).convert_alpha()
 bg = pygame.image.load(get_asset_path("minigames", "pistol_mosquito", "background.png")).convert_alpha()
-tiro = pygame.image.load(get_asset_path("minigames", "pistol_mosquito", "shot.png")).convert_alpha()
 vea = pygame.image.load(get_asset_path("minigames", "pistol_mosquito", "vein.png")).convert_alpha()
 
 screen_width = 1066
@@ -94,7 +93,6 @@ class PistolMosquito:
         self.mosquitos = [Mosquito() for _ in range(10)]
         self.start_time = time.time()
         self.timer_duration = 8
-        self.clock = pygame.time.Clock()
         self.veia = Veia()
         self.pontos = 0
 

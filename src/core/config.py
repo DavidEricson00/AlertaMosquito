@@ -2,7 +2,6 @@
 
 WINDOW_WIDTH = 1066
 WINDOW_HEIGHT = 600
-TARGET_FPS = 60
 WINDOW_CAPTION = "Alerta Mosquito"
 
 # Player and UI Border Colors (corresponding to players 0, 1, 2, 3)

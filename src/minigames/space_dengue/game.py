@@ -1,7 +1,6 @@
 """Space Dengue minigame: Space Invaders inspired shooter defending against mosquito swarms."""
 
 import pygame
-import sys
 from random import choice, randint
 from src.core.paths import get_asset_path
 from src.minigames.space_dengue.player import Player
@@ -24,8 +23,6 @@ class SpaceMinigame:
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
         # Obstacle Setup
-        self.shape = obstacle.shape
-        self.block_size = 6
         self.blocks = pygame.sprite.Group()
         self.obstacle_amount = 4
         self.obstacle_x_positions = [num * (screen_width / self.obstacle_amount) for num in range(self.obstacle_amount)]

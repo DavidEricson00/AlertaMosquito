@@ -12,11 +12,6 @@ border_colors = PLAYER_BORDER_COLORS
 border_size = 10
 border_size1 = 5
 border_radius = 10
-font = pygame.font.Font(None, 24)
-
-size1 = (200, 300)
-size2 = (100, 100)
-size3 = (50, 50)
 
 def draw_image_with_border(screen, image, pos, width, border_color, border_size, border_radius):
     """Draw a surface surrounded by a rounded rectangle border."""
