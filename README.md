@@ -305,32 +305,3 @@ AlertaMosquito/
         └── runner/                  # Corrida com obstáculos direcionais
 ```
 
----
-
-## 🏫 Contexto Acadêmico
-
-Este projeto foi desenvolvido como trabalho acadêmico universitário com o objetivo de aplicar conceitos de programação orientada a objetos, desenvolvimento de jogos com Pygame e design de experiências educativas voltadas ao público infantil.
-
-O tema — combate à dengue — foi escolhido por sua relevância para a saúde pública brasileira, especialmente em regiões tropicais onde o *Aedes aegypti* é endêmico.
-
----
-
-## 🌱 Melhorias Futuras
-
-Funcionalidades que poderiam ser incorporadas em versões futuras:
-
-- [ ] Sistema de pontuação global com ranking
-- [ ] Suporte a controle (gamepad) nos minigames
-- [ ] Modo de jogo em rede local
-- [ ] Efeitos sonoros e trilha musical
-- [ ] Novos minigames e casas especiais
-- [ ] Modo campanha com fases progressivas
-- [ ] Localização em outros idiomas
-
----
-
-<div align="center">
-
-Feito com 🦟 e muito Python para ensinar crianças a combater a dengue.
-
-</div>
