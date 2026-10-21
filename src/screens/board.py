@@ -13,7 +13,6 @@ from src.core.paths import (
 # Board tile sizing constants
 CASA_SIZE = 80
 CASA_STRIDE = CASA_SIZE + 8
-SOMBRA_SIZE = int(80 * 1600 / 1280)
 
 # Tile types distribution
 TIPOS = [
@@ -62,7 +61,6 @@ medalha = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens
 medalhas = pygame.transform.smoothscale(pygame.image.load(UI_MEDAL).convert_alpha(), (160, 160))
 carta = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "card.png")).convert_alpha(), (256, 256))
 cartabg = pygame.image.load(get_asset_path("screens", "board", "card_bg.png")).convert_alpha()
-sombra = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "tile_shadow.png")).convert_alpha(), (320, 320))
 interrogacao = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "question_mark.webp")).convert_alpha(), (160, 160))
 seta = pygame.image.load(get_asset_path("screens", "board", "arrow.png")).convert_alpha()
 moedinha = pygame.transform.smoothscale_by(pygame.image.load(UI_COIN).convert_alpha(), 0.1)
@@ -222,9 +220,6 @@ class Tabuleiro:
                     elif casa.id[1] == 17:
                         utils.smoothscaleblit(self.tabuleiro, h, objetos[4], (0, 0), None, CASA_STRIDE / 143)
 
-                sombra_pos = (casa.pos[0] - (SOMBRA_SIZE - CASA_SIZE) * 0.5, casa.pos[1] - (SOMBRA_SIZE - CASA_SIZE) * 0.5)
-                if casa.tipo != "vazio":
-                    utils.smoothscaleblit(self.tabuleiro, h, sombra, sombra_pos, None, SOMBRA_SIZE / sombra.get_height())
                 match casa.tipo:
                     case "teleporte":
                         utils.smoothscaleblit(self.tabuleiro, h, portal, casa.pos, None, CASA_SIZE / portal.get_height())
