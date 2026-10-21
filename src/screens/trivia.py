@@ -93,7 +93,7 @@ PERGUNTAS = [
         "Em qual das seguintes situações a pessoa deve procurar atendimento médico com urgência ao contrair dengue?",
         "Quando apresenta apenas febre baixa",
         "Quando sente dor de cabeça leve",
-        "Quando apresenta sinais de sangramento ou dificuldade para respirar",
+        "Quando apresenta sangramento ou dificuldade para respirar",
         "Quando há coceira leve nas pernas",
         2
     ),
@@ -101,7 +101,7 @@ PERGUNTAS = [
         "Qual é a forma mais eficaz de evitar a contaminação pela dengue?",
         "Não se aproximar de pessoas contaminadas",
         "Tomar antibióticos preventivos",
-        "Evitar a picada do mosquito através do uso de repelentes e roupas longas",
+        "Evitar a picada através do uso de repelentes e roupas longas",
         "Tomar vacinas disponíveis para todas as idades",
         2
     ),
@@ -228,7 +228,7 @@ PERGUNTAS = [
     (
         "O que é a \"ação de bloqueio\" no combate à dengue?",
         "Fechamento de áreas afetadas por mosquitos",
-        "Aplicação de inseticida em uma região específica após a identificação de casos de dengue",
+        "Aplicação de inseticida após a identificação de casos",
         "Bloqueio do trânsito para evitar a disseminação",
         "Proibição do uso de água encanada",
         1
