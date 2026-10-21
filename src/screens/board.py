@@ -61,7 +61,6 @@ medalha = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens
 medalhas = pygame.transform.smoothscale(pygame.image.load(UI_MEDAL).convert_alpha(), (160, 160))
 carta = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "card.png")).convert_alpha(), (256, 256))
 cartabg = pygame.image.load(get_asset_path("screens", "board", "card_bg.png")).convert_alpha()
-interrogacao = pygame.transform.smoothscale(pygame.image.load(get_asset_path("screens", "board", "question_mark.webp")).convert_alpha(), (160, 160))
 seta = pygame.image.load(get_asset_path("screens", "board", "arrow.png")).convert_alpha()
 moedinha = pygame.transform.smoothscale_by(pygame.image.load(UI_COIN).convert_alpha(), 0.1)
 moedinha_black = utils.tint_mult(moedinha, "black")
@@ -116,20 +115,27 @@ class Tabuleiro:
     alphas = [0, 0, 0, 0]
     animacoes = [(None, 0, None) for _ in range(4)]
 
-    def __init__(self, casas, jogo):
+    def __init__(self, casas, jogo, animacao_inicial=None):
         self.modo = "dado"
         self.font_pergunta = pygame.font.Font(None, 56)
         self.font_resposta = pygame.font.Font(None, 48)
         self.font_dado = pygame.font.Font(None, 128)
         self.dado_numero = random.randint(1, 6)
         self.dado_tempo = 0
+        self.passos_restantes = 0
         self.tempo = 0
         self.pode_entrar_em_camera = False
         self.texto_dire = texto_dire
         self.hud_icons = {}
+        self.hud_nomes = {}
+        self.hud_moedas = {}
         self.dado_surfaces = {}
         self.carta_texto_cache = None
         self.carta_cache_key = None
+
+        if animacao_inicial is not None:
+            self.modo = "animando"
+            self.animar(animacao_inicial, jogo.jogador_atual)
 
         if casas is not None:
             self.casas = casas
@@ -202,6 +208,84 @@ class Tabuleiro:
             shadow = utils.tint_mult(txt, (0, 0, 0, 31))
             self.dado_surfaces[numero] = (txt, shadow)
         return self.dado_surfaces[numero]
+
+    def desenhar_huds(self, screen, jogo, delta):
+        """Render HUD indicators for all active players in the screen corners."""
+        if self.modo == "camera":
+            return
+
+        vw = screen.get_width() * 600 / screen.get_height()
+        vh = 600
+        hud_w = 165
+        hud_h = 130
+
+        corners = [
+            (4, 4),                          # Jogador 1: Superior esquerdo
+            (vw - hud_w - 4, 4),             # Jogador 2: Superior direito
+            (4, vh - hud_h - 4),             # Jogador 3: Inferior esquerdo
+            (vw - hud_w - 4, vh - hud_h - 4) # Jogador 4: Inferior direito
+        ]
+
+        escala_tela = screen.get_height() / 600
+
+        for num, j in enumerate(jogo.jogadores):
+            if num >= 4:
+                break
+            ox, oy = corners[num]
+
+            # 1. Nome do jogador com sombra
+            if num not in self.hud_nomes:
+                name_shadow = fonte.render(f"Jogador {num + 1}", True, "black")
+                name_surf = fonte.render(f"Jogador {num + 1}", True, PLAYER_BORDER_COLORS[num])
+                self.hud_nomes[num] = (name_shadow, name_surf)
+            name_shadow, name_surf = self.hud_nomes[num]
+            utils.smoothscaleblit(screen, 600, name_shadow, (ox + 2, oy + 2), None, 0.3)
+            utils.smoothscaleblit(screen, 600, name_surf, (ox, oy), None, 0.3)
+
+            # 2. Ícone do personagem com indicador de turno ativo
+            icon_x = ox
+            icon_y = oy + 20
+            is_turn = (num == jogo.jogador_atual)
+            if is_turn:
+                border_rect = (
+                    int(round((icon_x - 3) * escala_tela)),
+                    int(round((icon_y - 3) * escala_tela)),
+                    int(round(78 * escala_tela)),
+                    int(round(78 * escala_tela))
+                )
+                pygame.draw.rect(
+                    screen,
+                    PLAYER_BORDER_COLORS[num],
+                    border_rect,
+                    width=max(1, int(round(3 * escala_tela))),
+                    border_radius=max(1, int(round(6 * escala_tela)))
+                )
+
+            icon, icon_black = self.get_hud_icon(j.personagem)
+            utils.smoothscaleblit(screen, 600, icon_black, (icon_x + 2, icon_y + 2), None, 0.36)
+            utils.smoothscaleblit(screen, 600, icon, (icon_x, icon_y), None, 0.36)
+
+            # 3. Moedas
+            coin_x = ox + 76
+            coin_y = oy + 36
+            utils.smoothscaleblit(screen, 600, moedinha_black, (coin_x + 2, coin_y + 2), None, 0.24)
+            utils.smoothscaleblit(screen, 600, moedinha, (coin_x, coin_y), None, 0.24)
+
+            moedas_key = (num, j.moedas)
+            if moedas_key not in self.hud_moedas:
+                m_shadow = fonte_big.render(str(j.moedas), True, "black")
+                m_surf = fonte_big.render(str(j.moedas), True, "white")
+                self.hud_moedas[moedas_key] = (m_shadow, m_surf)
+            m_shadow, m_surf = self.hud_moedas[moedas_key]
+            utils.smoothscaleblit(screen, 600, m_shadow, (coin_x + 36 + 2, coin_y + 4 + 2), None, 0.3)
+            utils.smoothscaleblit(screen, 600, m_surf, (coin_x + 36, coin_y + 4), None, 0.3)
+
+            # 4. Barra de medalhas
+            bar_x = ox
+            bar_y = oy + 94
+            medalhas_idx = min(max(j.medalhas, 0), len(barras) - 1)
+            utils.smoothscaleblit(screen, 600, barras_black[medalhas_idx], (bar_x + 2, bar_y + 2), None, 0.3)
+            utils.smoothscaleblit(screen, 600, barras[medalhas_idx], (bar_x, bar_y), None, 0.3)
 
     def camerado(self, pos):
         """Transform world coordinate to camera-relative screen coordinate."""
@@ -309,19 +393,31 @@ class Tabuleiro:
                     sprite = jogador.get_andamento("down", True)
                 case ("robux", tempo_inicio, _):
                     if tempo >= tempo_inicio + 1000:
-                        jogo.passar_vez()
-                        self.modo = "dado"
-                        self.dado_numero = random.randint(1, 6)
                         self.animar(None, numero)
+                        if self.passos_restantes > 0:
+                            self.dado_numero = self.passos_restantes
+                            self.passos_restantes = 0
+                            self.dado_tempo = 0
+                            self.modo = "andando"
+                        else:
+                            jogo.passar_vez()
+                            self.modo = "dado"
+                            self.dado_numero = random.randint(1, 6)
                     t = (tempo - tempo_inicio) / 1000
                     t *= t
                     utils.smoothscaleblit(screen, 600, medalhas, self.camerado((pos[0] + 8, pos[1] - 32 - t * 72)), None, 0.4)
                 case ("pobreza", tempo_inicio, _):
                     if tempo >= tempo_inicio + 1000:
-                        jogo.passar_vez()
-                        self.modo = "dado"
-                        self.dado_numero = random.randint(1, 6)
                         self.animar(None, numero)
+                        if self.passos_restantes > 0:
+                            self.dado_numero = self.passos_restantes
+                            self.passos_restantes = 0
+                            self.dado_tempo = 0
+                            self.modo = "andando"
+                        else:
+                            jogo.passar_vez()
+                            self.modo = "dado"
+                            self.dado_numero = random.randint(1, 6)
                     x = (tempo - tempo_inicio) / 250 * math.pi
                     if x % math.tau > math.pi:
                         x -= math.pi
@@ -337,8 +433,6 @@ class Tabuleiro:
                         self.dado_numero = random.randint(1, 6)
                         self.animar(None, numero)
                     sprite = jogador.get_andamento(["down", "left", "up", "right"][(tempo - tempo_inicio) // 100 % 4], True)
-                case ("carta", tempo_inicio, _):
-                    utils.smoothscaleblit(screen, 600, interrogacao, self.camerado((pos[0] + 0, pos[1] + 0)))
                 case ("decisao", tempo_inicio, _):
                     pass
 
@@ -405,18 +499,8 @@ class Tabuleiro:
                 utils.lerp(self.cam_pos[1], proxima_cam_pos[1], speed * delta)
             )
 
-        # Display HUD: player name, icon, coins, medals
-        utils.smoothscaleblit(screen, 600, fonte.render(f"Jogador {jogo.jogador_atual + 1}", True, "black"), (4 + 2, 4 + 2), None, 0.5)
-        utils.smoothscaleblit(screen, 600, fonte.render(f"Jogador {jogo.jogador_atual + 1}", True, PLAYER_BORDER_COLORS[jogo.jogador_atual]), (4, 4), None, 0.5)
-        icon, icon_black = self.get_hud_icon(jogador.personagem)
-        utils.smoothscaleblit(screen, 600, icon_black, (2, 47), None, 0.6)
-        utils.smoothscaleblit(screen, 600, icon, (0, 45), None, 0.6)
-        utils.smoothscaleblit(screen, 600, moedinha_black, (130, 96 + 2), None, 0.4)
-        utils.smoothscaleblit(screen, 600, moedinha, (128, 96), None, 0.4)
-        utils.smoothscaleblit(screen, 600, fonte_big.render(str(jogador.moedas), True, "black"), (180 + 2, 96 + 8 + 2), None, 0.5)
-        utils.smoothscaleblit(screen, 600, fonte_big.render(str(jogador.moedas), True, "white"), (180 + 0, 96 + 8 + 0), None, 0.5)
-        utils.smoothscaleblit(screen, 600, barras_black[jogador.medalhas], (6, 152), None, 0.5)
-        utils.smoothscaleblit(screen, 600, barras[jogador.medalhas], (4, 150), None, 0.5)
+        # Display player HUDs in all four corners
+        self.desenhar_huds(screen, jogo, delta)
 
         movimento = utils.movimento(1024, delta)
         if self.modo in ("andando", "dado"):
@@ -581,6 +665,7 @@ class Tabuleiro:
                     jogador.casa = casa
                     jogador.direcao = direcao
                     if self.encontrar_casa(jogador.casa).tipo in ("medalha", "decisao"):
+                        self.passos_restantes = self.dado_numero
                         self.dado_numero = 0
                         self.dado_tempo = 0
             if self.dado_tempo < 0.5 and self.dado_numero > 0:
@@ -611,11 +696,8 @@ class Tabuleiro:
                             self.animar("riqueza", jogador.numero)
                             self.modo = "animando"
                         else:
-                            jogo.passar_vez()
-                            self.modo = "dado"
-                            self.dado_tempo = 0
-                            self.dado_numero = random.randint(1, 6)
-                            self.animar(None, jogador.numero)
+                            self.animar("pobreza", jogador.numero)
+                            self.modo = "animando" 
             case "camera":
                 virtual_width = screen.get_width() * 600 / screen.get_height()
                 self.cam_movida = (

@@ -155,12 +155,10 @@ def main():
                 tempo_inicio_minigame = pygame.time.get_ticks()
             case "ganhou":
                 jogo.receber_moedas(10)
-                jogo.passar_vez()
-                modo = Tabuleiro(casas, jogo)
+                modo = Tabuleiro(casas, jogo, animacao_inicial="riqueza")
                 tela_minigame = None
             case "perdeu":
-                jogo.passar_vez()
-                modo = Tabuleiro(casas, jogo)
+                modo = Tabuleiro(casas, jogo, animacao_inicial="pobreza")
                 tela_minigame = None
 
         pygame.display.update()
