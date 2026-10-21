@@ -14,6 +14,11 @@ screen_width = 1066
 screen_height = 600
 font = pygame.font.Font(None, 74)
 
+def mouse_logico(pos):
+    janela = pygame.display.get_surface()
+    largura, altura = janela.get_size()
+    return (pos[0] * screen_width / largura, pos[1] * screen_height / altura)
+
 class Mosquito:
     """Individual flying mosquito entity that falls and inverts when shot."""
     def __init__(self):
@@ -70,15 +75,15 @@ class Mosquito:
 
 class Veia:
     """Player-controlled vein tracking mouse horizontal position at the bottom of the screen."""
-    def __init__(self, scale_factor=2):
+    def __init__(self, scale_factor=3):
         tamanho = (int(vea.get_width() * scale_factor), int(vea.get_height() * scale_factor))
         self.image = pygame.transform.scale(vea, tamanho)
         self.rect = self.image.get_rect()
         self.rect.centery = screen_height * 0.85
 
     def update(self):
-        mouse_x, _ = pygame.mouse.get_pos()
-        self.rect.centerx = mouse_x
+        mouse_x, _ = mouse_logico(pygame.mouse.get_pos())
+        self.rect.centerx = int(mouse_x)
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
