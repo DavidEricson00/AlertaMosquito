@@ -17,7 +17,7 @@ CASA_STRIDE = CASA_SIZE + 8
 # Tile types distribution
 TIPOS = [
     "+R$5", "+R$5", "+R$5",
-    "-R$2",
+    "-R$3",
     "dado", "dado",
     "carta", "carta", "carta",
     "minigame", "minigame", "minigame",
@@ -376,7 +376,7 @@ class Tabuleiro:
                         utils.smoothscaleblit(self.tabuleiro, h, portal, casa.pos, None, CASA_SIZE / portal.get_height())
                     case "+R$5":
                         utils.smoothscaleblit(self.tabuleiro, h, cinero, casa.pos, None, CASA_SIZE / cinero.get_height())
-                    case "-R$2":
+                    case "-R$3":
                         utils.smoothscaleblit(self.tabuleiro, h, lixo, casa.pos, None, CASA_SIZE / lixo.get_height())
                     case "dado":
                         utils.smoothscaleblit(self.tabuleiro, h, dado, casa.pos, None, CASA_SIZE / dado.get_height())
@@ -684,7 +684,7 @@ class Tabuleiro:
                             jogo.receber_moedas(5)
                             self.modo = "animando"
                             self.dado_tempo = 0
-                        case "-R$2":
+                        case "-R$3":
                             self.animar("pobreza", jogador.numero)
                             jogo.perder_moedas(3)
                             self.modo = "animando"
