@@ -19,7 +19,7 @@ class Player(pygame.sprite.Sprite):
         self.max_x_constraint = constraint
         self.ready = True
         self.laser_time = 0
-        self.laser_cooldown = 500
+        self.laser_cooldown = 300
         self.x = self.rect.x
         self.lasers = pygame.sprite.Group()
         self.tempo = 0.0
