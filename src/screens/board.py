@@ -21,7 +21,7 @@ TIPOS = [
     "dado", "dado",
     "carta", "carta", "carta",
     "minigame", "minigame", "minigame",
-    "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte", "teleporte"
+    "teleporte"
 ]
 
 MAPA = [
@@ -166,6 +166,20 @@ class Tabuleiro:
             if casa.id == tile_id and casa.tipo != "vazio":
                 return casa
         return None
+
+    def escolher_destino_teleporte(self, casa_atual):
+        """Pick a random valid teleport destination.
+
+        Excludes empty tiles, the current tile and other teleport tiles
+        (so teleports never chain into each other).
+        """
+        candidatas = [
+            c.id for c in self.casas
+            if c.tipo not in ("vazio") and c.id != casa_atual
+        ]
+        if not candidatas:
+            return casa_atual
+        return random.choice(candidatas)
 
     def proxima_casa_e_direcao(self, jogador):
         """Determine next available tile and direction along player's trajectory."""
@@ -461,9 +475,7 @@ class Tabuleiro:
                         sprite = jogador.get_andamento(["down", "left", "up", "right"][tempo_decorrido // 100 % 4], True)
                     else:
                         if self.teleporte_destino is None:
-                            nova_casa = (random.randint(0, len(MAPA) - 1), random.randint(0, len(MAPA[0]) - 1))
-                            while not self.encontrar_casa(nova_casa) or nova_casa == jogador.casa:
-                                nova_casa = (random.randint(0, len(MAPA) - 1), random.randint(0, len(MAPA[0]) - 1))
+                            nova_casa = self.escolher_destino_teleporte(jogador.casa)
                             jogador.casa = nova_casa
                             self.teleporte_destino = nova_casa
 
@@ -476,12 +488,10 @@ class Tabuleiro:
                             if self.passos_restantes > 0:
                                 self.dado_numero = self.passos_restantes
                                 self.passos_restantes = 0
-                                self.dado_tempo = 0
-                                self.modo = "andando"
                             else:
-                                jogo.passar_vez()
-                                self.modo = "dado"
-                                self.dado_numero = random.randint(1, 6)                
+                                self.dado_numero = 0
+                            self.dado_tempo = 0
+                            self.modo = "andando"
                 case ("decisao", tempo_inicio, _):
                     pass
 
