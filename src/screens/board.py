@@ -14,10 +14,6 @@ from src.core.paths import (
 CASA_SIZE = 80
 CASA_STRIDE = CASA_SIZE + 8
 
-# NOVO: zoom do modo câmera, dividido em degraus pré-escalados
-ZOOM_CAMERA = 1.25
-ZOOM_PASSOS = 50  # 1.00, 1.05, 1.10, 1.15, 1.20, 1.25
-
 # Tile types distribution
 TIPOS = [
     "+R$5", "+R$5", "+R$5",
@@ -115,7 +111,6 @@ class Tabuleiro:
     setas_mults = [0, 0, 0, 0]
     setas_direcoes = [-1, -1, -1, -1]
     escala_mapa = 1
-    escala_desenho = 1.0  # NOVO: escala efetivamente usada no frame (degrau do zoom)
     tabuleiro = None
     alphas = [0, 0, 0, 0]
     animacoes = [(None, 0, None) for _ in range(4)]
@@ -139,7 +134,6 @@ class Tabuleiro:
         self.carta_cache_key = None
         self.teleporte_destino = None
         self.hud_teleporte_cache = {}
-        self.mapa_cache = {}  # NOVO: degraus do mapa pré-escalados
 
         if animacao_inicial is not None:
             self.modo = "animando"
@@ -343,39 +337,6 @@ class Tabuleiro:
         """Transform world coordinate to camera-relative screen coordinate."""
         return (pos[0] - self.cam_pos[0] + 1066 / 2, pos[1] - self.cam_pos[1] + 600 / 2)
 
-    # NOVO ---------------------------------------------------------------
-    def obter_mapa_passo(self, passo):
-        """Return the map pre-scaled by 1 / (1 + passo * 0.05). Created once and cached.
-
-        Evita reescalar o mapa gigante a cada frame (isso fazia o mapa sumir no Linux).
-        """
-        if passo <= 0:
-            return self.tabuleiro
-        surf = self.mapa_cache.get(passo)
-        if surf is None:
-            fator = 1 + passo * (ZOOM_CAMERA - 1) / ZOOM_PASSOS
-            tamanho = (
-                max(1, int(round(self.tabuleiro.get_width() / fator))),
-                max(1, int(round(self.tabuleiro.get_height() / fator))),
-            )
-            try:
-                surf = pygame.transform.smoothscale(self.tabuleiro, tamanho)
-            except Exception:
-                surf = pygame.transform.scale(self.tabuleiro, tamanho)
-            self.mapa_cache[passo] = surf
-        return surf
-
-    def desenhar_mapa(self, screen):
-        """Draw the board using only plain blits of pre-scaled surfaces."""
-        progresso = (self.escala_mapa - 1) / (ZOOM_CAMERA - 1)
-        passo = int(round(utils.clamp(progresso, 0, 1) * ZOOM_PASSOS))
-        self.escala_desenho = 1 + passo * (ZOOM_CAMERA - 1) / ZOOM_PASSOS
-
-        esc = screen.get_height() / (600 * self.escala_desenho)
-        cam = self.camerado((0, 0))
-        screen.blit(self.obter_mapa_passo(passo), (cam[0] * esc, cam[1] * esc))
-    # --------------------------------------------------------------------
-
     def event(self, ev):
         if ev.type == pygame.MOUSEBUTTONDOWN or (
             ev.type == pygame.KEYDOWN and ev.key in [pygame.K_ESCAPE, pygame.K_RETURN, pygame.K_SPACE]
@@ -395,7 +356,6 @@ class Tabuleiro:
         )
         if self.tabuleiro is None or self.tabuleiro.get_size() != tabuleiro_size:
             self.tabuleiro = pygame.Surface(tabuleiro_size)
-            self.mapa_cache = {}  # NOVO: tamanho mudou, descarta os degraus antigos
             h = fundo.get_height() * CASA_STRIDE / 143
             utils.smoothscaleblit(self.tabuleiro, h, fundo, (0, 0), None, CASA_STRIDE / 143)
             utils.smoothscaleblit(self.tabuleiro, h, objetos[0], (0, 0), None, CASA_STRIDE / 143)
@@ -429,8 +389,14 @@ class Tabuleiro:
                     case "vazio":
                         pass
 
-        # NOVO: desenho do mapa só com blit (sem reescalar a cada frame)
-        self.desenhar_mapa(screen)
+        if self.escala_mapa >= 1.249:
+            utils.smoothscaleblit(screen, 600 * 1.25, self.tabuleiro, self.camerado((0, 0)), None, 600 / screen.get_height())
+        elif abs(self.escala_mapa - 1.0) < 1e-4:
+            escala_tela = screen.get_height() / 600
+            cam = self.camerado((0, 0))
+            screen.blit(self.tabuleiro, (cam[0] * escala_tela, cam[1] * escala_tela))
+        else:
+            utils.scaleblit(screen, 600 * self.escala_mapa, self.tabuleiro, self.camerado((0, 0)), None, 600 / screen.get_height())
 
         # Render and animate players
         tempo = pygame.time.get_ticks()
@@ -557,9 +523,8 @@ class Tabuleiro:
 
             claridade = utils.clamp(255 * self.alphas[numero], 0, 255)
             pos = (pos[0] - 2, pos[1] - 8)
-            # NOVO: usa a mesma escala do mapa desenhado (escala_desenho), para alinhar
             utils.scaleblit(
-                screen, 600 * self.escala_desenho,
+                screen, 600 * self.escala_mapa,
                 utils.tint_mult(pygame.transform.scale(sprite, sprite_tamanho), (claridade, claridade, claridade, 255)),
                 self.camerado(pos)
             )
@@ -578,7 +543,7 @@ class Tabuleiro:
         if self.modo == "carta":
             proxima_cam_pos = (proxima_cam_pos[0] + 128, proxima_cam_pos[1])
         elif self.modo == "camera":
-            self.escala_mapa = utils.lerp(self.escala_mapa, ZOOM_CAMERA, 16 * delta)
+            self.escala_mapa = 1
             proxima_cam_pos = self.cam_movida
         else:
             self.escala_mapa = utils.lerp(self.escala_mapa, 1, 16 * delta)
@@ -791,12 +756,22 @@ class Tabuleiro:
                             self.modo = "animando"
                         else:
                             self.animar("pobreza", jogador.numero)
-                            self.modo = "animando"
+                            self.modo = "animando" 
+
             case "camera":
                 virtual_width = screen.get_width() * 600 / screen.get_height()
+
                 self.cam_movida = (
-                    utils.clamp(self.cam_movida[0] + movimento[0], 1066 / 2, fundo.get_width() - 1960 * virtual_width / 1066),
-                    utils.clamp(self.cam_movida[1] + movimento[1], 600 / 2, fundo.get_height() - 1620)
+                    utils.clamp(
+                        self.cam_movida[0] + movimento[0],
+                        533,  # Mínimo horizontal (esquerda)
+                        fundo.get_width() - 1960 * virtual_width / 1256  # Máximo horizontal (direita)
+                    ),
+                    utils.clamp(
+                        self.cam_movida[1] + movimento[1],
+                        300,  # Mínimo vertical (topo)
+                        fundo.get_height() - 1420  # Máximo vertical (baixo)
+                    )
                 )
 
 BoardScreen = Tabuleiro
