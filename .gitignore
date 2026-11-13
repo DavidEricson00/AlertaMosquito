@@ -18,3 +18,8 @@ venv/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# PyInstaller
+/build/
+/dist/
+*.spec
