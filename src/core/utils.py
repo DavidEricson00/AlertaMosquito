@@ -16,11 +16,11 @@ def mouse_pos_para(screen, altura_esperada):
 
 # Preloaded character walk animation frames and icons
 andamentos = [
-    pygame.image.load(path) for path in CHARACTER_WALK_SPRITES
+    pygame.image.load(path).convert_alpha() for path in CHARACTER_WALK_SPRITES
 ]
 
 icones = [
-    pygame.image.load(path) for path in CHARACTER_ICONS
+    pygame.image.load(path).convert_alpha() for path in CHARACTER_ICONS
 ]
 
 def clamp(v, x, y):
