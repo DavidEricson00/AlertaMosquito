@@ -192,14 +192,33 @@ Após um jogador acumular cinco medalhas, a tela de vitória é exibida com conf
 
 ---
 
-## ⚙️ Pré-requisitos e Instalação
 
-### Requisitos
+## 📥 Downloads e Instalação
 
-- **Python 3.10** ou superior
-- **pip** (gerenciador de pacotes do Python)
+Acesse a página de releases para baixar a versão mais recente do jogo, sem precisar instalar Python ou Pygame.
 
-### Passo a passo
+[**⬇️ Alerta Mosquito v1.0.0 — Downloads**](https://github.com/DavidEricson00/AlertaMosquito/releases/tag/v1.0.0)
+
+| Sistema | Download |
+|---|---|
+| 🪟 **Windows** | [Alerta-Mosquito-Windows-v1.0.0.zip](https://github.com/DavidEricson00/AlertaMosquito/releases/download/v1.0.0/Alerta-Mosquito-Windows-v1.0.0.zip) |
+| 🐧 **Linux** | [Alerta-Mosquito-Linux-v1.0.0.zip.zip](https://github.com/DavidEricson00/AlertaMosquito/releases/download/v1.0.0/Alerta-Mosquito-Linux-v1.0.0.zip.zip) |
+
+### Windows
+
+1. Baixe o arquivo `Alerta-Mosquito-Windows-v1.0.0.zip`.
+2. Extraia o conteúdo do arquivo.
+3. Execute `Alerta Mosquito.exe`.
+
+### Linux
+
+1. Baixe o arquivo `Alerta-Mosquito-Linux-v1.0.0.zip.zip`.
+2. Extraia o conteúdo do arquivo.
+3. Execute o jogo pelo executável incluído na pasta extraída.
+
+### Executar a partir do código-fonte (opcional)
+
+Caso queira executar ou modificar o projeto diretamente pelo código-fonte:
 
 **1. Clone o repositório**
 
@@ -208,7 +227,7 @@ git clone https://github.com/DavidEricson00/AlertaMosquito.git
 cd AlertaMosquito
 ```
 
-**2. (Opcional) Crie e ative um ambiente virtual**
+**2. Crie e ative um ambiente virtual (opcional)**
 
 ```bash
 # Windows
