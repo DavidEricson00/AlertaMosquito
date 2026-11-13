@@ -3,6 +3,7 @@
 WINDOW_WIDTH = 1066
 WINDOW_HEIGHT = 600
 WINDOW_CAPTION = "Alerta Mosquito"
+WINDOW_ICON = "assets/ui/hud/coin.png"
 
 # Player and UI Border Colors (corresponding to players 0, 1, 2, 3)
 PLAYER_BORDER_COLORS = [

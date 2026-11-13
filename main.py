@@ -9,12 +9,13 @@ import pygame
 
 # Initialize Pygame and main window
 pygame.init()
-from src.core.config import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_CAPTION
+from src.core.config import WINDOW_ICON, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_CAPTION
 from src.core.paths import get_asset_path, UI_TIMER_MOSQUITO, UI_TIMER_BAR
 
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE, 0, 0, 1)
 screen.set_alpha(None)
 pygame.display.set_caption(WINDOW_CAPTION)
+pygame.display.set_icon(pygame.image.load(WINDOW_ICON))
 clock = pygame.time.Clock()
 
 # Render loading splash
